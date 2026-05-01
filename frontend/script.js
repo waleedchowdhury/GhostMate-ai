@@ -1,12 +1,31 @@
 const resultOutput = document.querySelector("#resultOutput");
 const statusPill = document.querySelector("#statusPill");
 const modelBadge = document.querySelector("#modelBadge");
+const toolTitle = document.querySelector("#toolTitle");
+const toolSubtitle = document.querySelector("#toolSubtitle");
+const currentToolPill = document.querySelector("#currentToolPill");
+const chatCommand = document.querySelector("#chatCommand");
 const API_BASE = resolveApiBase();
 
 let healthState = null;
 let activeDocumentId = "";
 let activeConversationId = "";
 let activePanel = "emailPanel";
+
+const toolLabels = {
+  emailPanel: {
+    pill: "Email mode",
+    placeholder: "Ask GhostMate to draft, rewrite, improve, or personalize an email...",
+  },
+  pdfPanel: {
+    pill: "PDF mode",
+    placeholder: "Ask about the memorized PDF, study notes, summaries, questions, or explanations...",
+  },
+  assistantPanel: {
+    pill: "Assistant mode",
+    placeholder: "Ask GhostMate to plan, reason, research, or build a business workflow...",
+  },
+};
 
 function resolveApiBase() {
   const configuredBase = (window.GHOSTMATE_API_BASE || "").trim().replace(/\/$/, "");
@@ -107,6 +126,38 @@ function addChatMessage(role, text = "") {
   return bubble;
 }
 
+function activatePanel(panelId, options = {}) {
+  const nextTab = document.querySelector(`.tab[data-panel="${panelId}"]`);
+  const nextPanel = document.querySelector(`#${panelId}`);
+  if (!nextTab || !nextPanel) {
+    return;
+  }
+
+  document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
+
+  nextTab.classList.add("active");
+  nextPanel.classList.add("active");
+  activePanel = panelId;
+
+  if (toolTitle) {
+    toolTitle.textContent = nextTab.dataset.title || nextTab.textContent.trim();
+  }
+  if (toolSubtitle) {
+    toolSubtitle.textContent = nextTab.dataset.subtitle || "";
+  }
+  if (currentToolPill) {
+    currentToolPill.textContent = toolLabels[panelId]?.pill || "Agent mode";
+  }
+  if (chatCommand) {
+    chatCommand.placeholder = toolLabels[panelId]?.placeholder || "Message GhostMate...";
+  }
+
+  if (options.announce) {
+    addChatMessage("system", `Switched to ${toolLabels[panelId]?.pill || "agent mode"}.`);
+  }
+}
+
 function absorbConversationMarker(text) {
   const match = text.match(/\[conversation_id:([^\]]+)\]\n?/);
   if (match) {
@@ -167,13 +218,24 @@ function getPlainChatText() {
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
-
-    tab.classList.add("active");
-    document.querySelector(`#${tab.dataset.panel}`).classList.add("active");
-    activePanel = tab.dataset.panel;
+    activatePanel(tab.dataset.panel, { announce: true });
   });
+});
+
+document.querySelectorAll(".command-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    activatePanel(button.dataset.panel, { announce: false });
+    chatCommand.value = button.dataset.message || "";
+    chatCommand.focus();
+  });
+});
+
+document.querySelector("#pdfFile").addEventListener("change", () => {
+  const file = document.querySelector("#pdfFile").files[0];
+  if (file) {
+    document.querySelector("#pdfMemoryStatus").textContent = `Ready to analyze: ${file.name}`;
+    addChatMessage("system", `PDF selected: ${file.name}. Click Memorize PDF to start interactive PDF chat.`);
+  }
 });
 
 document.querySelector("#generateEmail").addEventListener("click", async () => {
@@ -349,7 +411,7 @@ async function checkBackend() {
   modelBadge.textContent = "Checking model...";
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1500);
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const response = await request("/health", {
@@ -375,4 +437,5 @@ async function checkBackend() {
   }
 }
 
+activatePanel(activePanel, { announce: false });
 checkBackend();
