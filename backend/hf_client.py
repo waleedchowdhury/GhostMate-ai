@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -62,7 +63,26 @@ def _clean_generation(text: str) -> str:
     for marker in ("[/INST]", "Assistant:", "ASSISTANT:", "<|assistant|>"):
         if marker in cleaned:
             cleaned = cleaned.split(marker, 1)[-1].strip()
-    return _normalize_text(cleaned).strip().strip('"')
+    return clean_model_output(cleaned)
+
+
+def clean_model_output(text: str) -> str:
+    cleaned = _normalize_text(text).strip()
+    cleaned = re.sub(
+        r"\{\s*\"tool\"\s*:\s*\"[^\"]+\"\s*,\s*\"arguments\"\s*:\s*\{.*?\}\s*\}",
+        "",
+        cleaned,
+        flags=re.DOTALL,
+    )
+    cleaned = re.sub(
+        r"^\s*(Drafting|Using|Calling|Running)\b[^\n]*(?:\n|$)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = cleaned.replace("```json", "").replace("```", "")
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip().strip('"')
 
 
 def _normalize_text(text: str) -> str:

@@ -2,6 +2,23 @@ from .brain import EMAIL_FRAMEWORK, PROFESSIONAL_SYSTEM
 from .hf_client import generate_text
 
 
+PERSONAL_EMAIL_TERMS = (
+    "romantic",
+    "love",
+    "girlfriend",
+    "boyfriend",
+    "wife",
+    "husband",
+    "crush",
+    "apology",
+    "sorry",
+    "birthday",
+    "friend",
+    "family",
+    "personal",
+)
+
+
 def _title_preserving_case(text: str) -> str:
     text = text.strip().rstrip(".")
     if not text:
@@ -59,6 +76,42 @@ def write_email(
     audience = audience.strip()
     offer = offer.strip()
     call_to_action = call_to_action.strip()
+    combined_request = " ".join((purpose, tone, details, email_type, audience, offer, call_to_action)).lower()
+    is_personal = any(term in combined_request for term in PERSONAL_EMAIL_TERMS)
+
+    if is_personal:
+        prompt = f"""
+Write a sincere, human, copy-ready personal email.
+
+Purpose: {purpose}
+Recipient: {recipient}
+Tone: {tone}
+Important details: {details or "Not specified"}
+
+Rules:
+- Sound like a real person, not a corporate assistant.
+- No JSON, no tool calls, no strategy notes.
+- Do not overdo it or sound fake.
+- If names or memories are missing, use tasteful placeholders.
+- Return only:
+Subject: ...
+
+Hi/Hey ...
+
+...
+
+Personal touch to add: ...
+""".strip()
+
+        generated = generate_text(
+            prompt,
+            system_prompt=PROFESSIONAL_SYSTEM,
+            max_new_tokens=650,
+            temperature=0.45,
+            timeout=75,
+        )
+        if generated:
+            return generated
 
     prompt = f"""
 {EMAIL_FRAMEWORK}

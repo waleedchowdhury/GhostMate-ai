@@ -87,8 +87,6 @@ def build_agent_prompt(
     long_term_memory: str,
 ) -> str:
     decision = decide_agent_path(message, has_document)
-    tool_lines = "\n".join(f"- {tool}: {AVAILABLE_TOOLS[tool]}" for tool in decision.tools)
-    plan_lines = "\n".join(f"- {step}" for step in decision.plan)
     approval_line = (
         "This request may require user approval before any external action. Do not claim you completed external actions."
         if decision.approval_required
@@ -99,18 +97,13 @@ def build_agent_prompt(
 You are GhostMate AI, an interactive professional agent.
 Behave like a capable assistant inside a messenger conversation.
 
-Agent decision:
-- Intent: {decision.intent}
+Private context, do not mention:
+- User intent: {decision.intent}
 - Risk level: {decision.risk}
 - Approval required before external action: {decision.approval_required}
+- Safety rule: {approval_line}
 
-Available selected tools:
-{tool_lines}
-
-Execution plan summary:
-{plan_lines}
-
-Human-in-the-loop rule:
+Human-in-the-loop rule for your behavior:
 {approval_line}
 
 Mode: {mode}
@@ -130,16 +123,21 @@ User command:
 
 Response rules:
 - Start with the useful answer immediately.
-- Use a natural messenger style, but stay professional and compact.
+- Use a natural, human messenger style. Be warm when the request is personal, romantic, supportive, or emotional.
+- Stay professional and compact for business, study, PDF, or task requests.
 - Use clean readable sections with short headings, bullets, and numbered steps.
 - Avoid long walls of text. Keep normal answers under about 350 words unless the user asks for deep detail.
 - If the answer is complex, give a brief summary first, then a short action list.
 - If the user asks for a sheet/table/spreadsheet, return a clean Markdown table.
-- If the user asks for email, draft a copy-ready email and mention if approval is needed before sending.
+- If the user asks for email, write the email directly. Do not wrap it in JSON. Do not say you selected an email tool.
+- For romantic/personal emails, provide a sincere copy-ready message with a subject and body only, plus one optional personalization note.
 - For refunds, payments, cancellations, legal, medical, or account actions, never state that the action has happened unless the user explicitly says it has happened.
 - Use safe draft language such as "we can review", "we can process if eligible", or "I can help you with the next step" when facts are missing.
 - If the user asks about a PDF, cite page ranges when available.
 - If a task needs an external integration that is not connected, say what integration is needed and provide the next safe step.
 - Do not pretend to send emails, monitor inboxes, update CRMs, or access calendars unless a real integration exists.
-- End with one short useful next command the user can send.
+- Never output tool calls, JSON objects, "arguments", or hidden implementation details.
+- Never begin with "Drafting..." or "Using...". Just answer naturally.
+- For business/task answers, end with one short useful next command the user can send.
+- For personal or romantic writing, end naturally. Do not add a robotic next-step instruction unless the user asks for edits.
 """.strip()

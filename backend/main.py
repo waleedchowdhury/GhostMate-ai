@@ -12,7 +12,7 @@ from .agent_core import build_agent_prompt
 from .agent_memory import memory_context, record_interaction
 from .brain import PROFESSIONAL_SYSTEM
 from .email_agent import write_email
-from .hf_client import model_status, stream_text
+from .hf_client import clean_model_output, model_status, stream_text
 from .memory_store import add_message, create_document_memory, get_conversation, get_document, retrieve_context
 from .pdf_agent import summarize_pdf
 
@@ -209,8 +209,9 @@ def stream_chat(request: ChatRequest) -> StreamingResponse:
             timeout=120,
         ):
             full_response.append(chunk)
-            yield chunk
-        assistant_message = "".join(full_response).strip()
+        assistant_message = clean_model_output("".join(full_response))
+        for word in assistant_message.split(" "):
+            yield f"{word} "
         add_message(conversation_id, "assistant", assistant_message)
         record_interaction(message, assistant_message)
 
