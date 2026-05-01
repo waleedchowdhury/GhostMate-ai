@@ -31,24 +31,24 @@ User task:
 Extra context:
 {context or "Not specified"}
 
-Return this structure:
-EXECUTIVE ANSWER
+Return this clean structure. Keep it concise unless the task explicitly asks for depth:
+DIRECT ANSWER
 ...
 
-PROFIT / VALUE ANGLE
+VALUE ANGLE
 ...
 
-ACTION PLAN
+NEXT STEPS
 1. ...
 
-ASSETS TO CREATE
+ASSETS
 - ...
 
-RISKS AND FIXES
+RISKS / FIXES
 - Risk: ...
   Fix: ...
 
-NEXT BEST MOVE
+NEXT MOVE
 ...
 """.strip()
 

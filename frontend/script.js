@@ -31,6 +31,11 @@ const toolLabels = {
   },
 };
 
+function updateAppHeight() {
+  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${Math.round(viewportHeight)}px`);
+}
+
 function isMobileLayout() {
   return window.matchMedia("(max-width: 980px)").matches;
 }
@@ -99,6 +104,125 @@ function showResult(text) {
   addChatMessage("assistant", text || "No response returned.");
 }
 
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderInlineMarkdown(value) {
+  return escapeHtml(value)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function isTableSeparator(line) {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+}
+
+function renderTable(lines) {
+  const rows = lines
+    .filter((line) => !isTableSeparator(line))
+    .map((line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim()));
+  if (!rows.length) {
+    return "";
+  }
+
+  const headers = rows[0];
+  const bodyRows = rows.slice(1);
+  const headerHtml = headers.map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join("");
+  const bodyHtml = bodyRows
+    .map((row) => `<tr>${row.map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`)
+    .join("");
+  return `<table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+
+function renderMarkdown(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const html = [];
+  let listType = "";
+  let tableLines = [];
+
+  const closeList = () => {
+    if (listType) {
+      html.push(`</${listType}>`);
+      listType = "";
+    }
+  };
+
+  const flushTable = () => {
+    if (tableLines.length) {
+      closeList();
+      html.push(renderTable(tableLines));
+      tableLines = [];
+    }
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (trimmed.includes("|") && /^\|?.+\|.+/.test(trimmed)) {
+      tableLines.push(trimmed);
+      return;
+    }
+
+    flushTable();
+
+    if (!trimmed) {
+      closeList();
+      return;
+    }
+
+    const heading = trimmed.match(/^#{1,4}\s+(.+)$/);
+    if (heading) {
+      closeList();
+      html.push(`<h4>${renderInlineMarkdown(heading[1])}</h4>`);
+      return;
+    }
+
+    const bullet = trimmed.match(/^[-*]\s+(.+)$/);
+    if (bullet) {
+      if (listType !== "ul") {
+        closeList();
+        listType = "ul";
+        html.push("<ul>");
+      }
+      html.push(`<li>${renderInlineMarkdown(bullet[1])}</li>`);
+      return;
+    }
+
+    const numbered = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (numbered) {
+      if (listType !== "ol") {
+        closeList();
+        listType = "ol";
+        html.push("<ol>");
+      }
+      html.push(`<li>${renderInlineMarkdown(numbered[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+  });
+
+  flushTable();
+  closeList();
+  return html.join("");
+}
+
+function setMessageContent(bubble, role, text) {
+  bubble.dataset.rawContent = text;
+  if (role === "assistant") {
+    bubble.innerHTML = renderMarkdown(text);
+  } else {
+    bubble.textContent = text;
+  }
+}
+
 async function postJson(url, data) {
   const response = await request(url, {
     method: "POST",
@@ -151,7 +275,7 @@ function addChatMessage(role, text = "") {
 
   const bubble = document.createElement("div");
   bubble.className = `message ${role}`;
-  bubble.textContent = text;
+  setMessageContent(bubble, role, text);
   resultOutput.appendChild(bubble);
   resultOutput.scrollTop = resultOutput.scrollHeight;
   return bubble;
@@ -237,7 +361,8 @@ async function streamPost(url, data, options = {}) {
     }
     const chunk = absorbConversationMarker(decoder.decode(value, { stream: true }));
     if (assistantBubble) {
-      assistantBubble.textContent += chunk;
+      const nextContent = `${assistantBubble.dataset.rawContent || ""}${chunk}`;
+      setMessageContent(assistantBubble, "assistant", nextContent);
     } else {
       resultOutput.textContent += chunk;
     }
@@ -262,7 +387,24 @@ closeSidebar.addEventListener("click", () => setSidebarOpen(false));
 sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
 
 window.addEventListener("resize", () => {
+  updateAppHeight();
   setSidebarOpen(!isMobileLayout());
+});
+
+window.visualViewport?.addEventListener("resize", updateAppHeight);
+window.visualViewport?.addEventListener("scroll", updateAppHeight);
+
+chatCommand.addEventListener("focus", () => {
+  if (isMobileLayout()) {
+    appWrapper.classList.add("keyboard-open");
+    updateAppHeight();
+    setTimeout(() => chatCommand.scrollIntoView({ block: "nearest" }), 80);
+  }
+});
+
+chatCommand.addEventListener("blur", () => {
+  appWrapper.classList.remove("keyboard-open");
+  updateAppHeight();
 });
 
 document.querySelectorAll(".command-chip").forEach((button) => {
@@ -480,6 +622,7 @@ async function checkBackend() {
   }
 }
 
+updateAppHeight();
 activatePanel(activePanel, { announce: false });
 setSidebarOpen(!isMobileLayout());
 checkBackend();
