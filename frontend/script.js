@@ -5,6 +5,10 @@ const toolTitle = document.querySelector("#toolTitle");
 const toolSubtitle = document.querySelector("#toolSubtitle");
 const currentToolPill = document.querySelector("#currentToolPill");
 const chatCommand = document.querySelector("#chatCommand");
+const appWrapper = document.querySelector("#appWrapper");
+const menuToggle = document.querySelector("#menuToggle");
+const closeSidebar = document.querySelector("#closeSidebar");
+const sidebarBackdrop = document.querySelector("#sidebarBackdrop");
 const API_BASE = resolveApiBase();
 
 let healthState = null;
@@ -26,6 +30,33 @@ const toolLabels = {
     placeholder: "Ask GhostMate to plan, reason, research, or build a business workflow...",
   },
 };
+
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 980px)").matches;
+}
+
+function setSidebarOpen(isOpen) {
+  if (isMobileLayout()) {
+    appWrapper.classList.toggle("sidebar-open", isOpen);
+    appWrapper.classList.remove("sidebar-collapsed");
+  } else {
+    appWrapper.classList.toggle("sidebar-collapsed", !isOpen);
+    appWrapper.classList.remove("sidebar-open");
+  }
+
+  if (menuToggle) {
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
+    menuToggle.textContent = isOpen && isMobileLayout() ? "Hide Tools" : "Tools";
+  }
+}
+
+function toggleSidebar() {
+  if (isMobileLayout()) {
+    setSidebarOpen(!appWrapper.classList.contains("sidebar-open"));
+  } else {
+    setSidebarOpen(appWrapper.classList.contains("sidebar-collapsed"));
+  }
+}
 
 function resolveApiBase() {
   const configuredBase = (window.GHOSTMATE_API_BASE || "").trim().replace(/\/$/, "");
@@ -156,6 +187,10 @@ function activatePanel(panelId, options = {}) {
   if (options.announce) {
     addChatMessage("system", `Switched to ${toolLabels[panelId]?.pill || "agent mode"}.`);
   }
+
+  if (isMobileLayout()) {
+    setSidebarOpen(false);
+  }
 }
 
 function absorbConversationMarker(text) {
@@ -220,6 +255,14 @@ document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     activatePanel(tab.dataset.panel, { announce: true });
   });
+});
+
+menuToggle.addEventListener("click", toggleSidebar);
+closeSidebar.addEventListener("click", () => setSidebarOpen(false));
+sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+
+window.addEventListener("resize", () => {
+  setSidebarOpen(!isMobileLayout());
 });
 
 document.querySelectorAll(".command-chip").forEach((button) => {
@@ -438,4 +481,5 @@ async function checkBackend() {
 }
 
 activatePanel(activePanel, { announce: false });
+setSidebarOpen(!isMobileLayout());
 checkBackend();

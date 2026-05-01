@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GhostMate AI</title>
-  <link rel="stylesheet" href="bootstrap.local.css?v=20260501-4">
-  <link rel="stylesheet" href="style.css?v=20260501-4">
+  <link rel="stylesheet" href="bootstrap.local.css?v=20260501-5">
+  <link rel="stylesheet" href="style.css?v=20260501-5">
 </head>
 <body>
-  <div class="app-wrapper d-flex">
-    <aside class="app-sidebar" aria-label="GhostMate tools">
+  <div class="app-wrapper d-flex" id="appWrapper">
+    <aside class="app-sidebar" id="toolSidebar" aria-label="GhostMate tools">
       <div class="brand-lockup">
-        <div class="brand-mark">GM</div>
         <div>
           <p class="eyebrow">Professional agent</p>
           <h1>GhostMate AI</h1>
         </div>
+        <button class="sidebar-close btn" id="closeSidebar" aria-label="Close tools menu">Close</button>
       </div>
 
       <nav class="tool-nav" aria-label="Choose a GhostMate function">
@@ -174,6 +174,8 @@
       </div>
     </aside>
 
+    <button class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close tools menu"></button>
+
     <main class="main-area">
       <header class="topbar">
         <div>
@@ -182,6 +184,7 @@
           <p id="toolSubtitle">Write client-ready outreach, follow-ups, proposals, and executive messages.</p>
         </div>
         <div class="topbar-actions">
+          <button class="ghost-action btn menu-toggle" id="menuToggle" aria-controls="toolSidebar" aria-expanded="true">Tools</button>
           <span class="status-pill" id="statusPill">Checking backend...</span>
           <button class="ghost-action btn" id="clearChat">New Chat</button>
           <button class="ghost-action btn" id="copyResult">Copy</button>
@@ -213,7 +216,7 @@
     </main>
   </div>
 
-  <script src="config.js?v=20260501-4"></script>
-  <script src="script.js?v=20260501-4"></script>
+  <script src="config.js?v=20260501-5"></script>
+  <script src="script.js?v=20260501-5"></script>
 </body>
 </html>
