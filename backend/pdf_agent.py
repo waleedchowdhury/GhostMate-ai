@@ -121,11 +121,9 @@ def _fallback_summary_from_pages(pages: list[PageText], target_length: str) -> s
 
     bullets = "\n".join(f"- {sentence.strip()}" for sentence in key_sentences if sentence.strip())
     return (
-        "STUDY SUMMARY\n"
+        "Here is the clearest summary I could build from the readable text:\n\n"
         f"{bullets}\n\n"
-        "KEY WARNING\n"
-        "- This local fallback is extractive. For stronger human-style notes, use the Hugging Face model connection.\n\n"
-        "HOW TO STUDY THIS\n"
+        "How to study this\n"
         "- Turn each bullet into a question.\n"
         "- Re-read the original pages for definitions, formulas, dates, and examples.\n"
         "- Make a one-page revision sheet from the most repeated ideas."
@@ -144,28 +142,32 @@ def _summarize_chunk(
 
 You are summarizing pages {chunk.start_page}-{chunk.end_page} for university students.
 The goal is not a tiny abstract. Create dense, useful study notes that preserve meaning.
+Sound like a patient tutor explaining the pages to a student, not a machine extracting text.
 
 Summary mode: {summary_mode}
 Detail level: {detail_level}
 Student focus: {focus or "general understanding, assignment writing, and exam revision"}
 
 For this page range, return:
-PAGE RANGE
+Pages covered
 Pages {chunk.start_page}-{chunk.end_page}
 
-CORE IDEAS
+Main idea
 - ...
 
-IMPORTANT DETAILS
+What it means
 - ...
 
-TERMS / DEFINITIONS
+Important details
 - ...
 
-EXAMPLES OR EVIDENCE
+Terms to remember
 - ...
 
-POSSIBLE EXAM OR ASSIGNMENT POINTS
+Examples or evidence
+- ...
+
+Likely exam or assignment points
 - ...
 
 TEXT:
@@ -209,25 +211,26 @@ Focus: {focus or "university notes, assignments, exam preparation"}
 Write naturally, like a strong student tutor explaining the material.
 Do not be vague. Preserve the important arguments, concepts, examples, and relationships.
 If the source does not contain a fact, do not invent it.
+Do not sound robotic. Avoid diagnostic labels and stiff report language.
 
 Return:
-TITLE
+Title
 
-HUMAN-STYLE OVERVIEW
+Quick overview
 
-MAIN IDEAS
+Main ideas
 
-DETAILED STUDY NOTES
+Study notes
 
-KEY TERMS AND DEFINITIONS
+Key terms
 
-ASSIGNMENT / ESSAY ANGLES
+Assignment or essay angles
 
-EXAM QUESTIONS WITH SHORT ANSWERS
+Practice questions
 
-MEMORY CHECKLIST
+Memory checklist
 
-SOURCE LIMITATIONS
+What may need checking in the original PDF
 
 NOTES TO MERGE:
 {chr(10).join(summaries)}
@@ -298,10 +301,9 @@ def summarize_pdf(
     )
 
     stats = (
-        "DOCUMENT PROCESSING REPORT\n"
+        "I read the PDF and built this from the text I could extract.\n"
         f"- Readable pages: {len(pages)}\n"
-        f"- Analysis chunks: {len(chunks)}\n"
-        f"- Summary mode: {summary_mode}\n"
-        f"- Target length: {TARGET_LENGTHS.get(target_length, TARGET_LENGTHS['standard'])['label']}\n\n"
+        f"- Summary style: {summary_mode}\n"
+        f"- Target depth: {TARGET_LENGTHS.get(target_length, TARGET_LENGTHS['standard'])['label']}\n\n"
     )
     return f"{stats}{final_summary}"

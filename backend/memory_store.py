@@ -55,8 +55,8 @@ def _quick_summary(pages: list[PageText]) -> str:
         if len(picked) >= 5:
             break
     if not picked:
-        return "PDF memorized. Ask GhostMate for notes, questions, explanations, or assignment help."
-    return "PDF memorized. Quick preview:\n" + "\n".join(f"- {sentence}" for sentence in picked)
+        return "I have the PDF in memory now. Ask me for a summary, study notes, questions, or a simple explanation."
+    return "I have the PDF in memory now. Here is a quick first look:\n" + "\n".join(f"- {sentence}" for sentence in picked)
 
 
 def create_document_memory(pdf_bytes: bytes, filename: str) -> DocumentMemory:
