@@ -76,6 +76,11 @@ def script_js() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "script.js")
 
 
+@app.get("/config.js")
+def config_js() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "config.js")
+
+
 @app.get("/bootstrap.local.css")
 def bootstrap_local_css() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "bootstrap.local.css")

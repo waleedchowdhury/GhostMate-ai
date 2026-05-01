@@ -1,12 +1,45 @@
 const resultOutput = document.querySelector("#resultOutput");
 const statusPill = document.querySelector("#statusPill");
 const modelBadge = document.querySelector("#modelBadge");
-const API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+const API_BASE = resolveApiBase();
 
 let healthState = null;
 let activeDocumentId = "";
 let activeConversationId = "";
 let activePanel = "emailPanel";
+
+function resolveApiBase() {
+  const configuredBase = (window.GHOSTMATE_API_BASE || "").trim().replace(/\/$/, "");
+  if (configuredBase) {
+    return configuredBase;
+  }
+
+  if (window.location.protocol === "file:") {
+    return "http://127.0.0.1:8000";
+  }
+
+  const host = window.location.hostname;
+  if (host === "127.0.0.1" || host === "localhost") {
+    return "";
+  }
+
+  return "";
+}
+
+function backendHelpMessage() {
+  if (API_BASE) {
+    return `Backend is not reachable at ${API_BASE}. Deploy or wake up the FastAPI server, then refresh GhostMate.`;
+  }
+  return "Backend is not connected. GitHub Pages only hosts the frontend, so the FastAPI backend must be deployed separately.";
+}
+
+async function request(url, options = {}) {
+  try {
+    return await fetch(`${API_BASE}${url}`, options);
+  } catch (error) {
+    throw new Error(backendHelpMessage());
+  }
+}
 
 function setLoading(message) {
   addChatMessage("system", message);
@@ -17,7 +50,7 @@ function showResult(text) {
 }
 
 async function postJson(url, data) {
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await request(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -25,7 +58,7 @@ async function postJson(url, data) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "Request failed.");
+    throw new Error(error.detail || backendHelpMessage());
   }
 
   return response.json();
@@ -97,7 +130,7 @@ async function streamPost(url, data, options = {}) {
     assistantBubble = addChatMessage("assistant", "");
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const response = await request(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -105,7 +138,7 @@ async function streamPost(url, data, options = {}) {
 
   if (!response.ok || !response.body) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "Streaming request failed.");
+    throw new Error(error.detail || backendHelpMessage());
   }
 
   const reader = response.body.getReader();
@@ -181,14 +214,14 @@ document.querySelector("#summarizePdf").addEventListener("click", async () => {
     formData.append("target_length", document.querySelector("#pdfLength").value);
     formData.append("detail_level", document.querySelector("#pdfDetail").value);
     formData.append("focus", document.querySelector("#pdfFocus").value.trim());
-    const response = await fetch(`${API_BASE}/api/pdf-summary`, {
+    const response = await request("/api/pdf-summary", {
       method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || "PDF summary failed.");
+      throw new Error(error.detail || backendHelpMessage());
     }
 
     const data = await response.json();
@@ -210,14 +243,14 @@ document.querySelector("#memorizePdf").addEventListener("click", async () => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_BASE}/api/pdf-memory`, {
+    const response = await request("/api/pdf-memory", {
       method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || "PDF memory failed.");
+      throw new Error(error.detail || backendHelpMessage());
     }
 
     const data = await response.json();
@@ -319,7 +352,7 @@ async function checkBackend() {
   const timeout = setTimeout(() => controller.abort(), 1500);
 
   try {
-    const response = await fetch(`${API_BASE}/health`, {
+    const response = await request("/health", {
       cache: "no-store",
       signal: controller.signal,
     });
@@ -334,8 +367,8 @@ async function checkBackend() {
     modelBadge.textContent = ai.configured ? `Model: ${ai.model}` : "Mode: local fallback";
     statusPill.classList.toggle("warn", !ai.configured);
   } catch (error) {
-    statusPill.textContent = "Backend slow";
-    modelBadge.textContent = "Still usable if server is starting. Refresh in a moment.";
+    statusPill.textContent = "Backend offline";
+    modelBadge.textContent = backendHelpMessage();
     statusPill.classList.add("warn");
   } finally {
     clearTimeout(timeout);
