@@ -32,8 +32,14 @@ const toolLabels = {
 };
 
 function updateAppHeight() {
-  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  const viewport = window.visualViewport;
+  const viewportHeight = viewport?.height || window.innerHeight;
+  const viewportOffset = viewport?.offsetTop || 0;
+  const keyboardInset = viewport
+    ? Math.max(0, window.innerHeight - viewportHeight - viewportOffset)
+    : 0;
   document.documentElement.style.setProperty("--app-height", `${Math.round(viewportHeight)}px`);
+  document.documentElement.style.setProperty("--keyboard-inset", `${Math.round(keyboardInset)}px`);
 }
 
 function isMobileLayout() {
@@ -281,6 +287,26 @@ function addChatMessage(role, text = "") {
   return bubble;
 }
 
+function keepComposerVisible() {
+  if (!isMobileLayout()) {
+    return;
+  }
+
+  updateAppHeight();
+  requestAnimationFrame(() => {
+    resultOutput.scrollTop = resultOutput.scrollHeight;
+    chatCommand.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+}
+
+function resizeComposer() {
+  chatCommand.style.height = "auto";
+  const maxHeight = isMobileLayout() ? 82 : 110;
+  const nextHeight = Math.min(chatCommand.scrollHeight, maxHeight);
+  chatCommand.style.height = `${nextHeight}px`;
+  keepComposerVisible();
+}
+
 function activatePanel(panelId, options = {}) {
   const nextTab = document.querySelector(`.tab[data-panel="${panelId}"]`);
   const nextPanel = document.querySelector(`#${panelId}`);
@@ -391,14 +417,22 @@ window.addEventListener("resize", () => {
   setSidebarOpen(!isMobileLayout());
 });
 
-window.visualViewport?.addEventListener("resize", updateAppHeight);
-window.visualViewport?.addEventListener("scroll", updateAppHeight);
+function handleViewportChange() {
+  updateAppHeight();
+  if (appWrapper.classList.contains("keyboard-open")) {
+    keepComposerVisible();
+  }
+}
+
+window.visualViewport?.addEventListener("resize", handleViewportChange);
+window.visualViewport?.addEventListener("scroll", handleViewportChange);
 
 chatCommand.addEventListener("focus", () => {
   if (isMobileLayout()) {
     appWrapper.classList.add("keyboard-open");
     updateAppHeight();
-    setTimeout(() => chatCommand.scrollIntoView({ block: "nearest" }), 80);
+    setTimeout(keepComposerVisible, 80);
+    setTimeout(keepComposerVisible, 260);
   }
 });
 
@@ -411,6 +445,7 @@ document.querySelectorAll(".command-chip").forEach((button) => {
   button.addEventListener("click", () => {
     activatePanel(button.dataset.panel, { announce: false });
     chatCommand.value = button.dataset.message || "";
+    resizeComposer();
     chatCommand.focus();
   });
 });
@@ -580,6 +615,7 @@ document.querySelector("#sendCommand").addEventListener("click", async () => {
       );
     }
     document.querySelector("#chatCommand").value = "";
+    resizeComposer();
   });
 });
 
@@ -589,6 +625,8 @@ document.querySelector("#chatCommand").addEventListener("keydown", (event) => {
     document.querySelector("#sendCommand").click();
   }
 });
+
+document.querySelector("#chatCommand").addEventListener("input", resizeComposer);
 
 async function checkBackend() {
   statusPill.textContent = "Backend online";
@@ -623,6 +661,7 @@ async function checkBackend() {
 }
 
 updateAppHeight();
+resizeComposer();
 activatePanel(activePanel, { announce: false });
 setSidebarOpen(!isMobileLayout());
 checkBackend();
