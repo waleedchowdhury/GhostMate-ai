@@ -13,6 +13,8 @@
    - `HF_TEXT_MODEL=openai/gpt-oss-120b`
    - `HF_ROUTER_URL=https://router.huggingface.co/v1/chat/completions`
 5. Deploy.
+6. The included Blueprint uses this backend URL:
+   - `https://ghostmate-ai-waleedchowdhury.onrender.com`
 
 ## Alternative free option: Hugging Face Spaces
 

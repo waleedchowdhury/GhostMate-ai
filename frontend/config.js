@@ -1,1 +1,1 @@
-window.GHOSTMATE_API_BASE = "https://ghostmate-ai.onrender.com";
+window.GHOSTMATE_API_BASE = "https://ghostmate-ai-waleedchowdhury.onrender.com";
