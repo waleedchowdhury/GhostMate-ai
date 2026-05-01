@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GhostMate AI</title>
+  <link rel="stylesheet" href="bootstrap.local.css?v=20260501-2">
+  <link rel="stylesheet" href="style.css?v=20260501-2">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Professional agent console</p>
+        <h1>GhostMate AI</h1>
+        <p class="subtitle">Premium email drafting, executive PDF analysis, and business task execution in one focused workspace.</p>
+      </div>
+      <div class="status-pill" id="statusPill">Checking backend...</div>
+    </section>
+
+    <section class="workspace">
+      <aside class="tool-sidebar">
+        <nav class="tabs" aria-label="GhostMate tools">
+          <button class="tab btn active" data-panel="emailPanel">Email</button>
+          <button class="tab btn" data-panel="pdfPanel">PDF</button>
+          <button class="tab btn" data-panel="assistantPanel">Assistant</button>
+        </nav>
+
+        <section class="panel active" id="emailPanel">
+          <div class="form-grid">
+          <label>
+            Purpose
+            <input id="emailPurpose" placeholder="Close a client meeting for the website redesign offer">
+          </label>
+          <label>
+            Recipient
+            <input id="emailRecipient" placeholder="Mr. Rahman / CTO at Apex">
+          </label>
+          <label>
+            Tone
+            <select id="emailTone">
+              <option>premium professional</option>
+              <option>confident sales</option>
+              <option>executive formal</option>
+              <option>warm relationship</option>
+              <option>short and direct</option>
+            </select>
+          </label>
+          <label>
+            Email Type
+            <select id="emailType">
+              <option>business</option>
+              <option>cold outreach</option>
+              <option>sales follow-up</option>
+              <option>proposal</option>
+              <option>partnership</option>
+              <option>client update</option>
+            </select>
+          </label>
+          <label>
+            Audience
+            <input id="emailAudience" placeholder="Busy founder, corporate manager, local business owner">
+          </label>
+          <label>
+            Offer / Value
+            <input id="emailOffer" placeholder="Save time, increase leads, reduce manual work">
+          </label>
+          <label class="wide">
+            Call To Action
+            <input id="emailCta" placeholder="Book a 15-minute call this week">
+          </label>
+          <label class="wide">
+            Details
+            <textarea id="emailDetails" placeholder="Add proof, price, deadline, relationship history, pain points, or exact facts."></textarea>
+          </label>
+          </div>
+          <button class="primary-action btn" id="generateEmail">Generate Premium Email</button>
+        </section>
+
+        <section class="panel" id="pdfPanel">
+          <div class="form-grid">
+          <label>
+            Summary Mode
+            <select id="pdfMode">
+              <option>university study notes</option>
+              <option>assignment helper</option>
+              <option>exam preparation</option>
+              <option>chapter by chapter notes</option>
+              <option>simple explanation</option>
+            </select>
+          </label>
+          <label>
+            Target Length
+            <select id="pdfLength">
+              <option value="standard">1-2 page summary</option>
+              <option value="short">short brief</option>
+              <option value="deep">deep study notes</option>
+              <option value="exam">exam guide</option>
+            </select>
+          </label>
+          <label>
+            Detail Level
+            <select id="pdfDetail">
+              <option>advanced</option>
+              <option>balanced</option>
+              <option>beginner friendly</option>
+              <option>very detailed</option>
+            </select>
+          </label>
+          <label>
+            Focus
+            <input id="pdfFocus" placeholder="Marketing exam, sociology assignment, key formulas, chapter 3-8">
+          </label>
+          </div>
+          <label class="file-drop">
+            <span>Upload PDF</span>
+            <input id="pdfFile" type="file" accept="application/pdf">
+          </label>
+          <div class="action-row">
+            <button class="primary-action btn" id="memorizePdf">Memorize PDF</button>
+            <button class="ghost-action btn" id="summarizePdf">Full Study Summary</button>
+          </div>
+          <p class="memory-status" id="pdfMemoryStatus">No PDF memorized yet.</p>
+          <div class="action-row">
+            <button class="ghost-action btn quick-pdf" data-message="Summarize this PDF in clear human language for a university student.">Summary</button>
+            <button class="ghost-action btn quick-pdf" data-message="Create a study sheet from this PDF as a markdown table with columns: Topic, Meaning, Important details, Page range, Why it matters.">Study Sheet</button>
+            <button class="ghost-action btn quick-pdf" data-message="Create detailed university notes from this PDF.">Notes</button>
+            <button class="ghost-action btn quick-pdf" data-message="Create exam questions with short answers from this PDF.">Questions</button>
+            <button class="ghost-action btn quick-pdf" data-message="Explain the most important ideas in simple human language.">Explain</button>
+          </div>
+        </section>
+
+        <section class="panel" id="assistantPanel">
+          <label>
+            Mode
+            <select id="assistantMode">
+              <option>business</option>
+              <option>profit strategy</option>
+              <option>client delivery</option>
+              <option>marketing</option>
+              <option>operations</option>
+              <option>research</option>
+            </select>
+          </label>
+          <label>
+            Task
+            <textarea id="assistantTask" placeholder="Build a profitable offer using GhostMate AI for small business email automation."></textarea>
+          </label>
+          <label>
+            Context
+            <textarea id="assistantContext" class="short-textarea" placeholder="Target customer, budget, skills, deadline, current assets, constraints, market details."></textarea>
+          </label>
+          <button class="primary-action btn" id="askAssistant">Run Agent</button>
+        </section>
+      </aside>
+
+      <section class="output chat-surface">
+        <div class="output-header">
+          <div>
+            <h2>GhostMate Chat</h2>
+            <p class="model-badge" id="modelBadge">AI mode loading</p>
+          </div>
+          <div class="action-row">
+            <button class="ghost-action btn" id="clearChat">New Chat</button>
+            <button class="ghost-action btn" id="copyResult">Copy</button>
+          </div>
+        </div>
+        <div id="resultOutput" class="result-output chat-thread">
+          <div class="message assistant">Hi, I am GhostMate. Upload a PDF and ask me for a summary, study sheet, notes, questions, or explanations. You can also use Email or Assistant from the left panel.</div>
+        </div>
+        <div class="chat-composer">
+          <textarea id="chatCommand" rows="1" placeholder="Message GhostMate... Try: summarize this PDF, make a study sheet, create exam questions"></textarea>
+          <button class="primary-action btn" id="sendCommand">Send</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260501-2"></script>
+</body>
+</html>

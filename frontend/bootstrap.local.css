@@ -1,0 +1,32 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.btn:disabled {
+  pointer-events: none;
+}
+
+.form-control,
+.form-select {
+  display: block;
+  width: 100%;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.w-100 {
+  width: 100%;
+}

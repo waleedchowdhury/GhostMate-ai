@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ghostmate-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HF_API_TOKEN
+        sync: false
+      - key: HF_API_MODE
+        value: router
+      - key: HF_TEXT_MODEL
+        value: openai/gpt-oss-120b
+      - key: HF_ROUTER_URL
+        value: https://router.huggingface.co/v1/chat/completions
